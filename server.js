@@ -17,7 +17,7 @@ app.get("/", (req, res) => {
     res.send("Hello World!");
 });
 
-
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapi));
 app.get("/", (req, res) => {
     res.json({
         name: "Task API",
