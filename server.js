@@ -1,5 +1,6 @@
 import express from "express";
 import { triggerAsyncId } from "node:async_hooks";
+import { type } from "node:os";
 
 const app = express();
 const port = 3000;
@@ -29,13 +30,14 @@ app.get("/health", (req, res) => {
 res.json({status: "ok"});
 });
 
-
+// Stage 2:
+// Read: list and single task
 app.get("/tasks", (req, res) => {
     res.status(200).json(tasks);
 });
 
 
-app.get("/task/:id", (req, res) => {
+app.get("/tasks/:id", (req, res) => {
     const id = Number(req.params.id);
     const task = tasks.find((t) => t.id === id);
 
@@ -46,6 +48,7 @@ app.get("/task/:id", (req, res) => {
     res.status(200).json(task);
 });
 
+// Stage 3:
 //POST /tasks - create a new task
 app.post("/tasks", (req, res) => {
     const {title} = req.body;
@@ -63,6 +66,51 @@ app.post("/tasks", (req, res) => {
 
 });
 
-app.listen(port, () => {
+// Stage 4: 
+// Update & Delete
+app.put("/tasks/:id", (req, res) => {
+    const id = parseInt(req.params.id);
+    const task = tasks.find((t) => t.id === id);
+    
+    const { title, done} = req.body;
+
+    if(!task) {
+        return res.status(404).json({error: `Task ${id} is not found!`});
+    }
+
+    const titleProvided = title !== undefined;
+    const doneProvided = done !== undefined;
+
+    if (!titleProvided && !doneProvided) {
+        return res.status(400).json({error: "Provide a title or done to update!"});
+    }
+
+    if (titleProvided && (typeof title !== 'string' || title.trim() == "")){
+        return res.status(400).json({error: "Title must be non-empty string!"});
+    }
+    
+    if (doneProvided && (typeof done !== "boolean")) {
+        return res.status(400).json({error: "Parameter 'done' must be true or false!"});
+    }
+
+    if (titleProvided) task.title = title.trim();
+    if (doneProvided) task.done = done;
+
+    res.status(200).json(task);
+});
+
+//Delete
+app.delete("/tasks/:id", (req, res) => {
+    const id  = Number(req.params.id);
+
+    const taskIndex = tasks.findIndex((t) => t.id === id);
+
+    if (taskIndex === -1) return res.status(404).json({ error: `Task ${id} could not found!`});
+    tasks.splice(taskIndex, 1);
+    return res.status(204).send();
+});
+
+app.listen(port, (error) => {
+    if (error) throw error;
     console.log(`App is listenin on port ${port}`);
 });
