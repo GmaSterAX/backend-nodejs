@@ -1,6 +1,6 @@
-import express from "express";
-import { triggerAsyncId } from "node:async_hooks";
-import { type } from "node:os";
+const express = require('express');
+const swaggerUi = require('swagger-ui-express');
+const openapi = require('./openapi.json');
 
 const app = express();
 const port = 3000;
