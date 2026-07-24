@@ -60,16 +60,22 @@ res.json({status: "ok"});
 // Stage 2:
 // Read: /tasks?search=...
 app.get("/tasks", (req, res) => {
-    const { search } = req.query;
+    const { search, done } = req.query;
 
-    let allTasks;
+    let query = "SELECT * FROM tasks WHERE 1=1";
+    const params = [];
 
     if (search) {
-        allTasks = db.prepare("SELECT * FROM tasks WHERE title LIKE ?").all(`%${search}%`);
-    } else {
-        allTasks = db.prepare("SELECT * FROM tasks").all();
+        query += " AND title LIKE ?";
+        params.push(`%${search}%`);
     }
-    
+
+    if (done !== undefined) {
+        query += " AND done = ?";
+        params.push(done === "true" ? 1 : 0);
+    }
+
+    const allTasks = db.prepare(query).all(...params);
     res.status(200).json(allTasks);
 });
 
