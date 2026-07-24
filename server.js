@@ -1,7 +1,6 @@
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const openapi = require('./openapi.json');
-const database = require('better-sqlite3');
 const Database = require('better-sqlite3');
 
 const db = new Database('tasks.db');
@@ -56,11 +55,21 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
 res.json({status: "ok"});
 });
-
+//req.query => /tasks?search..
+//req.param => /tasks/:id
 // Stage 2:
-// Read: list and single task
+// Read: /tasks?search=...
 app.get("/tasks", (req, res) => {
-    const allTasks = db.prepare("SELECT * FROM tasks").all();
+    const { search } = req.query;
+
+    let allTasks;
+
+    if (search) {
+        allTasks = db.prepare("SELECT * FROM tasks WHERE title LIKE ?").all(`%${search}%`);
+    } else {
+        allTasks = db.prepare("SELECT * FROM tasks").all();
+    }
+    
     res.status(200).json(allTasks);
 });
 
