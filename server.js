@@ -1,17 +1,47 @@
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const openapi = require('./openapi.json');
+const database = require('better-sqlite3');
+const Database = require('better-sqlite3');
+
+const db = new Database('tasks.db');
 
 const app = express();
 const port = 3000;
 
 app.use(express.json());
 
+// DB STARTS HERE
+// -------------------------------------------------------------
+db.exec(`
+    CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    done INTEGER DEFAULT 0)
+    `);
 
-let tasks = [{id: 1, title: "Laundary", done: false},
-        {id: 2, title: "Coding NodeJS", done: true}, 
-        {id: 3, title: "Garden Irrigation", done:false}]
+const rows = db.prepare("SELECT COUNT(*) AS count FROM tasks").get();
 
+if (rows.count === 0) {
+    console.log("The table is empty. Seed tasks will be added!");
+    const insert = db.prepare('INSERT INTO tasks (title, done) VALUES (?, ?)');
+    
+    const seedTasks = db.transaction(() => {
+        insert.run("Do grocery", 1);
+        insert.run("Clean the house", 0);
+        insert.run("Do internship assignments", 0);
+    });
+
+    seedTasks();
+    
+} else {
+    console.log(`The table has already ${rows.count} rows!`);
+}
+
+
+const allTasks = db.prepare("SELECT * FROM tasks").all();
+console.log("All the tasks: ", allTasks);
+// -------------------------------------------------------------
 
 app.get("/", (req, res) => {
     res.send("Hello World!");
