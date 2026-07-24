@@ -33,14 +33,11 @@ if (rows.count === 0) {
     });
 
     seedTasks();
-    
+
 } else {
     console.log(`The table has already ${rows.count} rows!`);
 }
 
-
-const allTasks = db.prepare("SELECT * FROM tasks").all();
-console.log("All the tasks: ", allTasks);
 // -------------------------------------------------------------
 
 app.get("/", (req, res) => {
@@ -63,13 +60,15 @@ res.json({status: "ok"});
 // Stage 2:
 // Read: list and single task
 app.get("/tasks", (req, res) => {
-    res.status(200).json(tasks);
+    const allTasks = db.prepare("SELECT * FROM tasks").all();
+    res.status(200).json(allTasks);
 });
 
 
 app.get("/tasks/:id", (req, res) => {
     const id = Number(req.params.id);
-    const task = tasks.find((t) => t.id === id);
+    
+    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
 
     if (!task) {
         return res.status(404).json({ error: `Task ${id} not found!`});
