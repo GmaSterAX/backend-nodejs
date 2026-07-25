@@ -1,12 +1,15 @@
+require('dotenv').config();
+
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const openapi = require('./openapi.json');
 const Database = require('better-sqlite3');
 
+
 const db = new Database('tasks.db');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
