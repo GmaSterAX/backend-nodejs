@@ -4,7 +4,14 @@ const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const openapi = require('./openapi.json');
 const Database = require('better-sqlite3');
+const { initDb } = require("./db"); 
 
+initDb()
+    .then(() => console.log("Connected to Postgres and ready!"))
+    .catch((err) => {
+        console.error("Failed to connect to Postgres: ", err);
+        process.exit(1);
+    });
 
 const db = new Database('tasks.db');
 
