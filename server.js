@@ -4,7 +4,7 @@ const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const openapi = require('./openapi.json');
 const Database = require('better-sqlite3');
-const { initDb } = require("./db"); 
+const { pool, initDb } = require("./db"); 
 
 initDb()
     .then(() => console.log("Connected to Postgres and ready!"))
@@ -69,7 +69,7 @@ res.json({status: "ok"});
 //req.param => /tasks/:id
 // Stage 2:
 // Read: /tasks?search=...
-app.get("/tasks", (req, res) => {
+app.get("/tasks", async (req, res) => {
     const { search, done } = req.query;
 
     let query = "SELECT * FROM tasks WHERE 1=1";
@@ -80,26 +80,35 @@ app.get("/tasks", (req, res) => {
         params.push(`%${search}%`);
     }
 
-    if (done !== undefined) {
-        query += " AND done = ?";
-        params.push(done === "true" ? 1 : 0);
+     if (done !== undefined) {
+        params.push(done === "true");
+        query += ` AND done = $${params.length}`;
     }
 
-    const allTasks = db.prepare(query).all(...params);
-    res.status(200).json(allTasks);
+    try {
+        const result = await pool.query(query, params);
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({error: "Something went wrong in tasks retrieval!"});
+    }
 });
 
 
-app.get("/tasks/:id", (req, res) => {
+app.get("/tasks/:id", async (req, res) => {
     const id = Number(req.params.id);
     
-    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+    try {
+        const result = await pool.query("SELECT * FROM tasks WHERE id = $1", [id]);
+        const task = result.rows[0];
 
-    if (!task) {
-        return res.status(404).json({ error: `Task ${id} not found!`});
+        if (!task) return res.status(404).json({error: "Task not found'"});
+        
+        res.status(200).json(task);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({error: "Something went wrong in task retrieval!"});
     }
-
-    res.status(200).json(task);
 });
 
 // Stage 3:
