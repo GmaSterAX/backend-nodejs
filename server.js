@@ -4,6 +4,7 @@ const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const openapi = require('./openapi.json');
 const { pool, initDb } = require("./db"); 
+const supabase = require('./supabaseClient');
 
 initDb()
     .then(() => console.log("Connected to Postgres and ready!"))
@@ -47,7 +48,7 @@ app.get("/tasks", async (req, res) => {
     if (search) {
     params.push(`%${search}%`);
     query += ` AND title LIKE $${params.length}`;
-}
+    }
 
      if (done !== undefined) {
         params.push(done === "true");
@@ -164,5 +165,5 @@ app.delete("/tasks/:id", async (req, res) => {
 
 app.listen(port, (error) => {
     if (error) throw error;
-    console.log(`App is listenin on port ${port}`);
+    console.log(`App is listenin on port ${port} and connected to supabase`);
 });
