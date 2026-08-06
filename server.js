@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const openapi = require('./openapi.json');
-const { pool, initDb } = require("./db"); 
+const { initDb } = require("./db"); 
 
 const tasksRouter = require('./routes/tasks');
 const authRouter = require('./routes/auth');
@@ -23,6 +23,11 @@ app.use(express.json());
 //ROUTERS 
 app.get("/", (req, res) => {
     res.send("Hello World!");
+});
+
+// GET /public/info
+app.get("/public/info", (req, res) => {
+    res.status(200).json({ message: "Welcome stranger! This info is public."});
 });
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapi));
