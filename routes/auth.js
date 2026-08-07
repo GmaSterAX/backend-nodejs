@@ -49,21 +49,4 @@ router.post("/login", async (req, res) => {
     }
 });
 
-// GET /protected/profile 
-router.get("/protected/profile", (req, res) => {
-    const authHeader = req.headers.authorization;
-
-    if(!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ error: "Access token required!"});
-    }
-
-    const token = authHeader.split(" ")[1]; //gets the toekn part Bearer ...
-
-    if(!token) {
-        return res.status(401).json({ error: "Access token reqiured."});
-    }
-
-    res.status(200).json({ message: "You reached a protected route.", token});
-});
-
 module.exports = router;
