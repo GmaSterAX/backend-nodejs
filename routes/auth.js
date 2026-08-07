@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const supabase = require('../supabaseClient');
+const requireAuth = require('../middleware/authGuard');
+
 
 // POST auth/signUp
 router.post("/signup", async (req, res) => {
@@ -49,4 +51,18 @@ router.post("/login", async (req, res) => {
     }
 });
 
+router.post("/logout", requireAuth, async (req, res) => {
+    try {
+        const { error } = await supabase.auth.signOut();
+
+        if(error) {
+            return res.status(500).json({ error: "Something went wrong during logout!"});
+        }
+        
+        res.status(204).send();
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Something went wrong during logout!"});
+    }
+});
 module.exports = router;
